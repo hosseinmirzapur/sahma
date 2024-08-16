@@ -1,13 +1,9 @@
-# Simple Makefile for a Go project
-
 # Build the application
-all: build
-
 build:
 	@echo "Building..."
 	
 	
-	@go build -o main cmd/api/main.go
+	@go build -o ./bin/main cmd/api/main.go
 
 # Run the application
 run:
@@ -32,26 +28,17 @@ docker-down:
 		docker-compose down; \
 	fi
 
-
 # Test the application
 test:
 	@echo "Testing..."
 	@go test ./... -v
 
-
-# Integrations Tests for the application
-itest:
-	@echo "Running integration tests..."
-	@go test ./internal/database -v
-
-
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm -f main
+	@rm -f ./bin/main
 
 # Live Reload
-
 watch:
 	@if command -v air > /dev/null; then \
             air; \
@@ -69,4 +56,4 @@ watch:
         fi
 
 
-.PHONY: all build run test clean watch
+.PHONY: build run test clean watch
