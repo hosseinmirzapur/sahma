@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"os"
+	"sahma/internal/database/models"
 
 	_ "github.com/joho/godotenv/autoload"
 	"gorm.io/driver/mysql"
@@ -52,5 +53,28 @@ func Register() error {
 }
 
 func Migrate() error {
-	return nil // nothing specific for now
+	err := DB.AutoMigrate(
+		&models.Activity{},
+		&models.Department{},
+		&models.DepartmentFile{},
+		&models.DepartmentUser{},
+		&models.Entity{},
+		&models.EntityGroup{},
+		&models.Folder{},
+		&models.Letter{},
+		&models.LetterAttachment{},
+		&models.LetterInbox{},
+		&models.LetterReply{},
+		&models.LetterSign{},
+		&models.Notification{},
+		&models.Permission{},
+		&models.Role{},
+		&models.User{},
+	)
+	if err != nil {
+		return err
+	}
+
+	// if no error happened then return nil
+	return nil
 }
