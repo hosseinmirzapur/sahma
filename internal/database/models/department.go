@@ -5,7 +5,7 @@ import "time"
 type Department struct {
 	ID              uint
 	Name            string
-	CreatedBy       uint
+	CreatedBy       *uint
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DepartmentUsers []*DepartmentUser
