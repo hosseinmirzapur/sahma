@@ -15,6 +15,8 @@ func RegisterMysql() error {
 	return nil
 }
 
+// Automigrate automatically migrates all uncommited database changes
+// without the need for creating migrations and redundant files
 func Migrate() error {
 	err := globals.GetDB().AutoMigrate(
 		&models.Activity{},
