@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"sahma/internal/database/global"
 	"sahma/internal/database/models"
+	"sahma/internal/globals"
 )
 
 func RegisterMysql() error {
@@ -11,12 +11,12 @@ func RegisterMysql() error {
 		return err
 	}
 
-	global.DB = db
+	globals.SetDB(db)
 	return nil
 }
 
 func Migrate() error {
-	err := global.DB.AutoMigrate(
+	err := globals.GetDB().AutoMigrate(
 		&models.Activity{},
 		&models.Department{},
 		&models.DepartmentFile{},
