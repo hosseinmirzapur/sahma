@@ -93,14 +93,16 @@ func (eg *EntityGroup) TextSearch(query *gorm.DB, searchTxt string) *gorm.DB {
 }
 
 // Always create EntityGroup with this function
-func CreateWithSlug(eg *EntityGroup) error {
+func CreateEntityGroupWithSlug(eg *EntityGroup) error {
 	err := globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		globals.GetDB().Create(&eg)
+
 		slug, err := eg.GetEntityGroupID()
 		if err != nil {
 			return err
 		}
 		eg.Slug = slug
-		return globals.GetDB().Create(&eg).Error
+		return globals.GetDB().Save(&eg).Error
 	})
 
 	return err
