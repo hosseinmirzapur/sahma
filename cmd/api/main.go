@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sahma/internal/database"
+	"sahma/internal/database/adapters"
 	"sahma/internal/server"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -12,13 +12,13 @@ import (
 
 func main() {
 	// Register database
-	err := database.Register()
+	err := adapters.RegisterMysql()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// Migrate database models
-	err = database.Migrate()
+	err = adapters.Migrate()
 	if err != nil {
 		log.Fatalln(err)
 	}
