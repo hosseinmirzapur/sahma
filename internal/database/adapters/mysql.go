@@ -17,7 +17,7 @@ var (
 	db_name = os.Getenv("DB_DATABASE")
 )
 
-func RegisterMySQL() (*gorm.DB, error) {
+func registerMySQL() (*gorm.DB, error) {
 	// Try to open connection to mysql database
 	db, err := gorm.Open(mysql.Open(
 		fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True",

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"sahma/internal/config"
 	"sahma/internal/globals"
 	"sahma/internal/helper"
 	"slices"
@@ -18,7 +19,8 @@ type Folder struct {
 	Name           string
 	UserID         *uint
 	ParentFolderID *uint
-	DeletedAt      *string
+	DeletedAt      *time.Time
+	DeletedBy      *uint
 	Meta           *string
 	ArchivedAt     *string
 	Slug           *string
@@ -27,6 +29,12 @@ type Folder struct {
 	Activities     []*Activity `gorm:"polymorphic:Activity"`
 	EntityGroups   []*EntityGroup
 	User           *User
+}
+
+type BreadCrumb struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 func CreateFolderWithSlug(folder *Folder) error {
@@ -105,7 +113,6 @@ func (f *Folder) SubFolders(breadcrumbs []uint, currentFolderID *int) ([]map[str
 	var folders []Folder
 	err := globals.
 		GetDB().
-		Preload("SubFolders").
 		Where("parent_folder_id = ?", f.ID).
 		Where("deleted_at = NULL").
 		Find(&folders).
@@ -144,17 +151,256 @@ func (f *Folder) SubFolders(breadcrumbs []uint, currentFolderID *int) ([]map[str
 }
 
 func (f *Folder) TempDeleteSubFoldersAndFiles(folder Folder, user User) error {
+	// Fetch all sub folders
+	var subFolders []Folder
+	err := globals.
+		GetDB().
+		Where("parent_folder_id = ?", folder.ID).
+		Find(&subFolders).
+		Error
+	if err != nil {
+		return err
+	}
+
+	// This should be a transaction to abide ACID rules
+	now := time.Now()
+	err = globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		for _, sf := range subFolders {
+			sf.DeletedAt = &now
+			sf.DeletedBy = &user.ID
+			err = globals.GetDB().Save(&sf).Error
+			if err != nil {
+				return err
+			}
+			err = f.TempDeleteSubFoldersAndFiles(sf, user)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Fetch all entity groups
+	var egs []EntityGroup
+	err = globals.
+		GetDB().
+		Where("parent_folder_id = ?", folder.ID).
+		Find(&egs).
+		Error
+	if err != nil {
+		return err
+	}
+
+	// This DB operation must also be a transaction to abide ACID rules
+	err = globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		for _, eg := range egs {
+			eg.DeletedAt = &now
+			eg.DeletedBy = &user.ID
+			err = globals.GetDB().Save(&eg).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return nil
+}
+
+func (f *Folder) RetrieveSubFoldersAndFiles(folder Folder, user User) error {
+	// Fetch all subfolders
+	var subFolders []Folder
+	err := globals.GetDB().Where("parent_folder_id = ?", folder.ID).Find(&subFolders).Error
+	if err != nil {
+		return err
+	}
+
+	// Just like the function above these batch DB operations should be transaction as well
+	err = globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		for _, sf := range subFolders {
+			sf.DeletedAt = nil
+			sf.DeletedBy = nil
+			err = globals.GetDB().Save(&sf).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	var egs []EntityGroup
+	err = globals.GetDB().Where("parent_folder_id = ?", folder.ID).Find(&egs).Error
+	if err != nil {
+		return err
+	}
+
+	err = globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		for _, eg := range egs {
+			eg.DeletedAt = nil
+			eg.DeletedBy = nil
+			err = globals.GetDB().Save(&eg).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return nil
+}
+
+func (f *Folder) GetParentFolders(folder Folder, breadcrumbs []BreadCrumb) (interface{}, error) {
+	// debug statement to see function call
+	config.Logger().Infof("Debug: Entering GetParentFolders for folder '%s'", folder.Name)
+
+	if len(breadcrumbs) == 0 {
+		slug, err := folder.GetFolderID()
+		if err != nil {
+			return nil, err
+		}
+		breadcrumbs = append(breadcrumbs, BreadCrumb{
+			Name: folder.Name,
+			Slug: *slug,
+			ID:   folder.ID,
+		})
+	}
+
+	if folder.ParentFolderID == nil {
+		parentFolder, err := folder.ParentFolder()
+		if err != nil {
+			return nil, err
+		}
+
+		pfSlug, err := parentFolder.GetFolderID()
+		if err != nil {
+			return nil, err
+		}
+
+		breadcrumbs = append(breadcrumbs, BreadCrumb{
+			Name: parentFolder.Name,
+			Slug: *pfSlug,
+			ID:   parentFolder.ID,
+		})
+
+		return f.GetParentFolders(*parentFolder, breadcrumbs)
+	}
+	config.Logger().Infof("Debug: Breadcrumbs for '%s': %v", folder.Name, breadcrumbs)
+	return breadcrumbs, nil
+}
+
+func (f *Folder) GetAllSubFoldersID(folder Folder, arrayIDs []uint) ([]uint, error) {
+	var subFolders []Folder
+	err := globals.GetDB().Where("parent_folder_id = ?", folder.ID).Find(&subFolders).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, sf := range subFolders {
+		arrayIDs = append(arrayIDs, sf.ID)
+		ids, err := f.GetAllSubFoldersID(sf, arrayIDs)
+		if err != nil {
+			return nil, err
+		}
+		arrayIDs = append(arrayIDs, ids...)
+	}
+
+	return arrayIDs, nil
+}
+
+func (f *Folder) ReplicateSubFoldersAndFiles(newFolder Folder) error {
+	// Fetch folders
 	var folders []Folder
 	err := globals.
 		GetDB().
-		Preload("User").
-		Preload("SubFolders").
-		Where("parent_folder_id = ?", folder.ID).
+		Where("parent_folder_id = ?", f.ID).
+		Where("deleted_at = NULL").
 		Find(&folders).
 		Error
 	if err != nil {
 		return err
 	}
 
-	return nil // todo: complete this method
+	// Fetch files
+	var files []EntityGroup
+	err = globals.
+		GetDB().
+		Where("parent_folder_id", f.ID).
+		Find(&files).
+		Error
+	if err != nil {
+		return err
+	}
+
+	// Create entity groups and department files in one transaction
+	// If one fails, or anything goes wrong the transaction is reverted
+	err = globals.GetDB().Transaction(func(tx *gorm.DB) error {
+		data := make([]map[string]interface{}, 0)
+		for _, file := range files {
+			attr, err := file.GetAttributes()
+			if err != nil {
+				return err
+			}
+			data = append(data, attr, map[string]interface{}{
+				"user_id":          newFolder.UserID,
+				"parent_folder_id": newFolder.ID,
+			})
+
+			dataBytes, err := helper.ToJSON(data)
+			if err != nil {
+				return err
+			}
+
+			var newEntityGroup EntityGroup
+			err = helper.FromJSON(dataBytes, &newEntityGroup)
+			if err != nil {
+				return err
+			}
+
+			err = CreateEntityGroupWithSlug(&newEntityGroup)
+			if err != nil {
+				return err
+			}
+
+			departments, err := file.GetEntityGroupDepartments()
+			if err != nil {
+				return err
+			}
+
+			for _, dep := range departments {
+				var departmentFile DepartmentFile
+				departmentFile.EntityGroupID = newEntityGroup.ID
+				departmentFile.DepartmentID = dep.ID
+
+				err = globals.GetDB().Create(&departmentFile).Error
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, folder := range folders {
+			var newF Folder
+			newF.Name = folder.Name
+			newF.UserID = newFolder.UserID
+			newF.ParentFolderID = &newFolder.ID
+			err = globals.GetDB().Create(&newF).Error
+			if err != nil {
+				return err
+			}
+
+			err = folder.ReplicateSubFoldersAndFiles(newF)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	return err
 }
+
+// todo: implement RetrieveSubFoldersAndFilesForDownload function

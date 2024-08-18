@@ -6,7 +6,7 @@ import (
 )
 
 func RegisterMysql() error {
-	db, err := RegisterMySQL()
+	db, err := registerMySQL()
 	if err != nil {
 		return err
 	}

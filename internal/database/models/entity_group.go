@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"reflect"
 	"sahma/internal/config"
 	"sahma/internal/globals"
 	"sahma/internal/helper"
@@ -30,7 +31,8 @@ type EntityGroup struct {
 	ArchivedAt          *string
 	ResultLocation      *string
 	NumberOfTry         uint
-	DeletedAt           time.Time
+	DeletedAt           *time.Time
+	DeletedBy           *uint
 	Slug                *string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
@@ -349,4 +351,21 @@ func (eg *EntityGroup) GetFileSizeHumanReadable(sizeInBytes float64) string {
 	}
 
 	return fmt.Sprintf("%.2f %s", sizeInBytes, units[unitIndex])
+}
+
+func (eg *EntityGroup) GetAttributes() (map[string]interface{}, error) {
+	v := reflect.ValueOf(*eg)
+	if v.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("expected struct, got %v", v.Kind())
+	}
+
+	result := make(map[string]interface{})
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i)
+		value := v.Field(i)
+		if !value.IsZero() {
+			result[field.Name] = value.Interface()
+		}
+	}
+	return result, nil
 }

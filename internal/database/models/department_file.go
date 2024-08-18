@@ -7,7 +7,7 @@ type DepartmentFile struct {
 	EntityGroupID uint
 	DepartmentID  uint
 	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	UpdatedAt     *time.Time
 	Department    Department
 	EntityGroup   EntityGroup
 }
