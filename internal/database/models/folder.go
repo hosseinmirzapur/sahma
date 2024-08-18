@@ -6,6 +6,7 @@ import (
 	"os"
 	"sahma/internal/globals"
 	"sahma/internal/helper"
+	"slices"
 	"strconv"
 	"time"
 
@@ -100,18 +101,60 @@ func (f *Folder) ParentFolder() (*Folder, error) {
 	return folder, nil
 }
 
-func (f *Folder) SubFolders() ([]*Folder, error) {
-	var folders []*Folder
-
+func (f *Folder) SubFolders(breadcrumbs []uint, currentFolderID *int) ([]map[string]interface{}, error) {
+	var folders []Folder
 	err := globals.
 		GetDB().
+		Preload("SubFolders").
 		Where("parent_folder_id = ?", f.ID).
-		Where("deleted_at = ?", "NULL").
+		Where("deleted_at = NULL").
 		Find(&folders).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil // todo: implement more from here
+	result := make([]map[string]interface{}, 0)
+
+	for _, folder := range folders {
+		subFolders, err := folder.SubFolders(breadcrumbs, currentFolderID)
+		if err != nil {
+			return nil, err
+		}
+
+		slug, err := folder.GetFolderID()
+		if err != nil {
+			return nil, err
+		}
+
+		isOpen := slices.Contains(
+			breadcrumbs, folder.ID) ||
+			(currentFolderID != nil && folder.ID == uint(*currentFolderID))
+		result = append(result, map[string]interface{}{
+			"id":               folder.ID,
+			"name":             folder.Name,
+			"parent_folder_id": folder.ParentFolderID,
+			"slug":             *slug,
+			"subFolders":       subFolders,
+			"isOpen":           isOpen,
+		})
+	}
+
+	return result, nil
+}
+
+func (f *Folder) TempDeleteSubFoldersAndFiles(folder Folder, user User) error {
+	var folders []Folder
+	err := globals.
+		GetDB().
+		Preload("User").
+		Preload("SubFolders").
+		Where("parent_folder_id = ?", folder.ID).
+		Find(&folders).
+		Error
+	if err != nil {
+		return err
+	}
+
+	return nil // todo: complete this method
 }
