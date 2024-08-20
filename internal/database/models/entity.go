@@ -16,7 +16,7 @@ type Entity struct {
 	ResultLocation     *string
 	Meta               *string
 	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	UpdatedAt          *time.Time
 	EntityGroup        *EntityGroup
 }
 

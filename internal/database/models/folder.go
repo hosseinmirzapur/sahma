@@ -22,10 +22,10 @@ type Folder struct {
 	DeletedAt      *time.Time
 	DeletedBy      *uint
 	Meta           *string
-	ArchivedAt     *string
+	ArchivedAt     *time.Time
 	Slug           *string
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 	Activities     []*Activity `gorm:"polymorphic:Activity"`
 	EntityGroups   []*EntityGroup
 	User           *User

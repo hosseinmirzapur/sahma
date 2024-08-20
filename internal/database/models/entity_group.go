@@ -23,12 +23,12 @@ type EntityGroup struct {
 	Name                string
 	Type                string
 	TranscriptionResult *string
-	TranscriptionAt     *string
+	TranscriptionAt     *time.Time
 	Status              EntityGroupStatus
 	Meta                *string
 	FileLocation        string
 	Description         *string
-	ArchivedAt          *string
+	ArchivedAt          *time.Time
 	ResultLocation      *string
 	NumberOfTry         uint
 	DeletedAt           *time.Time
