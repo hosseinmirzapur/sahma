@@ -403,4 +403,52 @@ func (f *Folder) ReplicateSubFoldersAndFiles(newFolder Folder) error {
 	return err
 }
 
-// todo: implement RetrieveSubFoldersAndFilesForDownload function
+/*
+currentDir: should not include "/"
+*/
+func (f *Folder) RetrieveSubFoldersAndFilesForDownload(currentDir string) error {
+	// Fetch entity groups
+	var egs []EntityGroup
+	err := globals.GetDB().Where("parent_folder>id", f.ID).Find(&egs).Error
+	if err != nil {
+		return err
+	}
+
+	for _, eg := range egs {
+		fileData, err := eg.GenerateFileDataForEmbedding(false)
+		if err != nil {
+			return err
+		}
+
+		fileContent := fileData.Content
+		fileName := fileData.Name
+
+		err = helper.SaveFile(config.GetStoragePath("zip")+"/"+currentDir+"/"+fileName, fileContent)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Fetch folders
+	var folders []Folder
+	err = globals.GetDB().Where("parent_folder_id", f.ID).Where("deleted_at = NULL").Find(&folders).Error
+	if err != nil {
+		return err
+	}
+
+	for _, folder := range folders {
+		dirPath := config.GetStoragePath("zip") + "/" + currentDir + "/" + folder.Name
+		err = helper.Mkdir(dirPath)
+		if err != nil {
+			return err
+		}
+
+		newDir := fmt.Sprintf("%s/%s", currentDir, folder.Name)
+		err = folder.RetrieveSubFoldersAndFilesForDownload(newDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
