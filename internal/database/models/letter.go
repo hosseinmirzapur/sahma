@@ -32,35 +32,35 @@ type Letter struct {
 
 // Priorities
 var (
-	PRIORITY_NORMAL      = "NORMAL"
-	PRIORITY_IMMEDIATELY = "IMMEDIATELY"
-	PRIORITY_INSTANT     = "INSTANT"
+	LETTER_PRIORITY_NORMAL      = "NORMAL"
+	LETTER_PRIORITY_IMMEDIATELY = "IMMEDIATELY"
+	LETTER_PRIORITY_INSTANT     = "INSTANT"
 )
 
 // Categories
 var (
-	CATEGORY_NORMAL       = "NORMAL"
-	CATEGORY_SECRET       = "SECRET"
-	CATEGORY_CONFIDENTIAL = "CONFIDENTIAL"
+	LETTER_CATEGORY_NORMAL       = "NORMAL"
+	LETTER_CATEGORY_SECRET       = "SECRET"
+	LETTER_CATEGORY_CONFIDENTIAL = "CONFIDENTIAL"
 )
 
 // Different types of Status
 var (
-	STATUS_SENT     = "SENT"
-	STATUS_RECEIVED = "RECEIVED"
-	STATUS_REPLIED  = "REPLIED"
-	STATUS_ACHIEVED = "ACHIEVED"
-	STATUS_DELETED  = "DELETED"
-	STATUS_DRAFT    = "DRAFT"
+	LETTER_STATUS_SENT     = "SENT"
+	LETTER_STATUS_RECEIVED = "RECEIVED"
+	LETTER_STATUS_REPLIED  = "REPLIED"
+	LETTER_STATUS_ACHIEVED = "ACHIEVED"
+	LETTER_STATUS_DELETED  = "DELETED"
+	LETTER_STATUS_DRAFT    = "DRAFT"
 )
 
 func (l *Letter) GetLetterStatus(user User) string {
 	status := ""
-	if l.Status == STATUS_SENT {
+	if l.Status == LETTER_STATUS_SENT {
 		if l.UserID == user.ID {
-			status = STATUS_SENT
+			status = LETTER_STATUS_SENT
 		} else {
-			status = STATUS_RECEIVED
+			status = LETTER_STATUS_RECEIVED
 		}
 	} else {
 		status = l.Status
@@ -71,11 +71,11 @@ func (l *Letter) GetLetterStatus(user User) string {
 
 func (l *Letter) GetPriorityLetterInPersian() (string, error) {
 	switch l.Priority {
-	case PRIORITY_NORMAL:
+	case LETTER_PRIORITY_NORMAL:
 		return "عادی", nil
-	case PRIORITY_IMMEDIATELY:
+	case LETTER_PRIORITY_IMMEDIATELY:
 		return "فوری", nil
-	case PRIORITY_INSTANT:
+	case LETTER_PRIORITY_INSTANT:
 		return "آنی", nil
 	default:
 		return "", fmt.Errorf("%v", map[string]interface{}{
@@ -86,20 +86,22 @@ func (l *Letter) GetPriorityLetterInPersian() (string, error) {
 
 func (l *Letter) GetCategoryLetterInPersian() (string, error) {
 	switch l.Category {
-	case CATEGORY_SECRET:
+	case LETTER_CATEGORY_SECRET:
 		return "سری", nil
-	case CATEGORY_CONFIDENTIAL:
+	case LETTER_CATEGORY_CONFIDENTIAL:
 		return "مطمئن", nil
-	case CATEGORY_NORMAL:
+	case LETTER_CATEGORY_NORMAL:
 		return "عادی", nil
 	default:
-		return "", fmt.Errorf("unsupported category letter")
+		return "", fmt.Errorf("%v", map[string]interface{}{
+			"message": "unsupported category letter",
+		})
 	}
 }
 
 func GetAllLetterPriorities() []string {
 	return []string{
-		PRIORITY_INSTANT, PRIORITY_IMMEDIATELY, PRIORITY_NORMAL,
+		LETTER_PRIORITY_INSTANT, LETTER_PRIORITY_IMMEDIATELY, LETTER_PRIORITY_NORMAL,
 	}
 }
 
