@@ -7,7 +7,7 @@ type Department struct {
 	Name            string
 	CreatedBy       *uint
 	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	UpdatedAt       *time.Time
 	DepartmentUsers []*DepartmentUser
 	Folders         []*Folder
 }

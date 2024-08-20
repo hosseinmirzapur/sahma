@@ -10,7 +10,7 @@ type LetterInbox struct {
 	IsRefer          *string
 	ReferredBy       uint
 	ReferDescription *string
-	DueDate          *string
+	DueDate          *time.Time
 	Meta             *string
 	CreatedAt        time.Time
 	UpdatedAt        *time.Time

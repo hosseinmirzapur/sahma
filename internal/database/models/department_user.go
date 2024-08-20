@@ -7,7 +7,7 @@ type DepartmentUser struct {
 	UserID       uint
 	DepartmentID uint
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 	Department   Department
 	User         User
 }
