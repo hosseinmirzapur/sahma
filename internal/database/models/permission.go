@@ -4,9 +4,9 @@ import "time"
 
 type Permission struct {
 	ID        uint
-	Full      int
-	Modify    int
-	ReadOnly  int
+	Full      bool
+	Modify    bool
+	ReadOnly  bool
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 	RoleID    uint
