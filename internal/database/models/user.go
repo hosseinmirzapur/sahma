@@ -24,7 +24,6 @@ type User struct {
 	Letters         []*Letter
 	Notifications   []*Notification
 	Role            *Role
-	Tokens          []*PersonalAccessToken
 	UserDepartments []*DepartmentUser
 }
 
