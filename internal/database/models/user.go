@@ -50,16 +50,15 @@ func (user *User) GetAllAvailableFiles(folder Folder) ([]map[string]interface{},
 		if err != nil {
 			return nil, err
 		}
-		parentSlug := "" // todo: implement ParentSlug logic
 
 		results = append(results, map[string]interface{}{
-			"id":          eg.ID,
-			"name":        eg.Name,
-			"type":        eg.Type,
-			"status":      eg.Status,
-			"slug":        *slug,
-			"description": *eg.Description,
-			"parentSlug":  parentSlug,
+			"id":             eg.ID,
+			"name":           eg.Name,
+			"type":           eg.Type,
+			"status":         eg.Status,
+			"slug":           *slug,
+			"description":    *eg.Description,
+			"parentFolderID": eg.ParentFolderID,
 		})
 	}
 
