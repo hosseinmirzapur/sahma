@@ -7,16 +7,16 @@ import (
 )
 
 func RegisterRoutes(r *gin.Engine) {
-	// register user web routes
+	// Register user web routes
 	userWebRoutes(r)
 }
 
 func userWebRoutes(r *gin.Engine) {
-	// register guest routes
+	// Register guest routes
 	guest := r.Group("/guest")
 	guestRoutes(guest)
 
-	// register auth routes
+	// Register auth routes
 	auth := r.Group("/auth")
 	authRoutes(auth)
 }
@@ -109,7 +109,47 @@ func reportRoutes(r *gin.RouterGroup) {
 }
 
 func dashboardRoutes(r *gin.RouterGroup) {
+	r.GET("/", handlers.DashboardHandler().Index)
+	r.POST("/copy", handlers.DashboardHandler().Copy)
+	r.POST("/move", handlers.DashboardHandler().Move)
+	r.POST("/delete", handlers.DashboardHandler().PermanentDelete)
+	r.GET("/trash", handlers.DashboardHandler().TrashList)
+	r.POST("/trash", handlers.DashboardHandler().TrashAction)
+	r.POST("/trash-retrieve", handlers.DashboardHandler().TrashRetrieve)
+	r.GET("/archive", handlers.DashboardHandler().ArchiveList)
+	r.POST("/archive", handlers.DashboardHandler().ArchiveAction)
+	r.POST("/archive-retrieve", handlers.DashboardHandler().ArchiveRetrieve)
+	r.POST("/create-zip", handlers.DashboardHandler().CreateZip)
+	r.GET("/search", handlers.DashboardHandler().SearchForm)
+	r.POST("/search", handlers.DashboardHandler().SearchAction)
 
+	// Register folder routes
+	folder := r.Group("/folder")
+	folderRoutes(folder)
+
+	// Register file routes
+	file := r.Group("/file")
+	fileRoutes(file)
+}
+
+func folderRoutes(r *gin.RouterGroup) {
+	r.GET("/show/:folderID", handlers.FolderHandler().Show)
+	r.POST("/create-root", handlers.FolderHandler().CreateRoot)
+	r.POST("/create/:folderID", handlers.FolderHandler().Create)
+	r.POST("/rename/:folderID", handlers.FolderHandler().Rename)
+}
+
+func fileRoutes(r *gin.RouterGroup) {
+	r.GET("/show/:fileID", handlers.FileHandler().Show)
+	r.POST("/add-description/:fileID", handlers.FileHandler().AddDescription)
+	r.POST("/transcribe-file/:fileID", handlers.FileHandler().Transcribe)
+	r.GET("/download-original-file/:fileID", handlers.FileHandler().DownloadOriginalFile)
+	r.GET("/download-searchable-file/:fileID", handlers.FileHandler().DownloadSearchableFile)
+	r.GET("/download-word-file/:fileID", handlers.FileHandler().DownloadWordFile)
+	r.POST("/rename/:fileID", handlers.FileHandler().Rename)
+	r.GET("/print/:fileID", handlers.FileHandler().PrintOriginalFile)
+	r.POST("/upload/:folderID", handlers.FileHandler().Upload)
+	r.GET("/upload-root/:fileID", handlers.FileHandler().UploadRoot)
 }
 
 func userManagementRoutes(r *gin.RouterGroup) {
