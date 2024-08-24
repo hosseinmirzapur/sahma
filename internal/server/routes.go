@@ -89,11 +89,15 @@ func cartableRoutes(r *gin.RouterGroup) {
 }
 
 func notificationRoutes(r *gin.RouterGroup) {
-
+	r.GET("/", handlers.NotificationHandler().Index)
+	r.POST("/create", handlers.NotificationHandler().CreateAction)
 }
 
 func departmentRoutes(r *gin.RouterGroup) {
-
+	r.GET("/list", handlers.DepartmentHandler().Index)
+	r.POST("/create", handlers.DepartmentHandler().Create)
+	r.POST("/edit/:department", handlers.DepartmentHandler().Edit)
+	r.POST("/delete/:department", handlers.DepartmentHandler().Delete)
 }
 
 func reportRoutes(r *gin.RouterGroup) {
