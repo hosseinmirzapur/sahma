@@ -101,7 +101,11 @@ func departmentRoutes(r *gin.RouterGroup) {
 }
 
 func reportRoutes(r *gin.RouterGroup) {
-
+	r.GET("/users", handlers.ReportHandler().UsersReport)
+	r.GET("/create-excel-users", handlers.ReportHandler().CreateExcelUserReport)
+	r.GET("/total-uploaded-files", handlers.ReportHandler().TotalUploadedFiles)
+	r.GET("/total-uploaded-files-type", handlers.ReportHandler().TotalUploadedFilesByType)
+	r.GET("/total-uploaded-transcribed-files", handlers.ReportHandler().TotalTranscribedFiles)
 }
 
 func dashboardRoutes(r *gin.RouterGroup) {
