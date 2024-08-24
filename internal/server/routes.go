@@ -153,7 +153,12 @@ func fileRoutes(r *gin.RouterGroup) {
 }
 
 func userManagementRoutes(r *gin.RouterGroup) {
-
+	r.GET("/", handlers.UserHandler().Index)
+	r.GET("/:user", handlers.UserHandler().UserInfo)
+	r.POST("/create-user", handlers.UserHandler().Create)
+	r.POST("/delete-user/:user", handlers.UserHandler().Block)
+	r.POST("/edit-user/:user", handlers.UserHandler().Edit)
+	r.POST("/search", handlers.UserHandler().Search)
 }
 
 func apiRoutes(r *gin.RouterGroup) {
