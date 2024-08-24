@@ -162,5 +162,6 @@ func userManagementRoutes(r *gin.RouterGroup) {
 }
 
 func apiRoutes(r *gin.RouterGroup) {
-
+	r.POST("/users", handlers.APIHandler().ListUsers)
+	r.POST("/letters", handlers.APIHandler().ListLetters)
 }
